@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard คลังวัสดุการแพทย์</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --border: #1e2d47;
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+    --accent-purple: #8b5cf6;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --glow-blue: rgba(59,130,246,0.15);
+    --glow-green: rgba(16,185,129,0.15);
+    --glow-red: rgba(239,68,68,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+/* GRID BACKGROUND */
+body::before {
+content: ‘’;
+position: fixed; inset: 0;
+background-image:
+linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none; z-index: 0;
+}
+
+.app { position: relative; z-index: 1; }
+
+/* HEADER */
+header {
+border-bottom: 1px solid var(–border);
+background: rgba(10,14,26,0.95);
+backdrop-filter: blur(12px);
+position: sticky; top: 0; z-index: 100;
+padding: 0 24px;
+}
+.header-inner {
+max-width: 1600px; margin: 0 auto;
+display: flex; align-items: center; justify-content: space-between;
+height: 60px; gap: 16px;
+}
+.logo {
+display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+width: 32px; height: 32px; border-radius: 8px;
+background: linear-gradient(135deg, var(–accent-blue), var(–accent-purple));
+display: flex; align-items: center; justify-content: center;
+font-size: 16px;
+}
+.logo-text { font-size: 15px; font-weight: 600; color: var(–text); }
+.logo-sub { font-size: 11px; color: var(–text-muted); font-weight: 400; }
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+.live-badge {
+display: flex; align-items: center; gap: 6px;
+background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);
+border-radius: 20px; padding: 4px 10px;
+font-size: 12px; color: var(–accent-green); font-weight: 500;
+}
+.live-dot {
+width: 7px; height: 7px; border-radius: 50%;
+background: var(–accent-green);
+animation: pulse 2s infinite;
+}
+@keyframes pulse {
+0%,100% { opacity: 1; transform: scale(1); }
+50% { opacity: 0.5; transform: scale(0.8); }
+}
+.last-update { font-size: 12px; color: var(–text-muted); font-family: ‘IBM Plex Mono’, monospace; }
+.btn-refresh {
+background: var(–surface2); border: 1px solid var(–border);
+color: var(–text-dim); border-radius: 8px; padding: 6px 14px;
+font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+transition: all 0.2s; font-family: inherit;
+}
+.btn-refresh:hover { border-color: var(–accent-blue); color: var(–accent-blue); }
+
+/* NAV TABS */
+.nav-tabs {
+max-width: 1600px; margin: 0 auto;
+display: flex; gap: 4px; padding: 12px 24px;
+}
+.tab {
+padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+cursor: pointer; transition: all 0.2s; border: none;
+color: var(–text-muted); background: transparent; font-family: inherit;
+}
+.tab.active { background: var(–accent-blue); color: #fff; }
+.tab:hover:not(.active) { background: var(–surface2); color: var(–text); }
+
+/* MAIN CONTENT */
+main { max-width: 1600px; margin: 0 auto; padding: 0 24px 32px; }
+
+/* STATS ROW */
+.stats-row {
+display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+margin-bottom: 20px;
+}
+.stat-card {
+background: var(–surface); border: 1px solid var(–border);
+border-radius: 12px; padding: 18px 20px;
+display: flex; flex-direction: column; gap: 6px;
+position: relative; overflow: hidden;
+animation: fadeIn 0.4s ease both;
+}
+.stat-card::before {
+content: ‘’; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.stat-card.blue::before { background: var(–accent-blue); }
+.stat-card.green::before { background: var(–accent-green); }
+.stat-card.red::before { background: var(–accent-red); }
+.stat-card.yellow::before { background: var(–accent-yellow); }
+.stat-label { font-size: 12px; color: var(–text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-value { font-size: 32px; font-weight: 700; font-family: ‘IBM Plex Mono’, monospace; line-height: 1; }
+.stat-value.blue { color: var(–accent-blue); }
+.stat-value.green { color: var(–accent-green); }
+.stat-value.red { color: var(–accent-red); }
+.stat-value.yellow { color: var(–accent-yellow); }
+.stat-sub { font-size: 12px; color: var(–text-muted); }
+
+/* GRID LAYOUT */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+/* CARD */
+.card {
+background: var(–surface); border: 1px solid var(–border);
+border-radius: 12px; overflow: hidden;
+animation: fadeIn 0.5s ease both;
+}
+.card-header {
+padding: 14px 20px; border-bottom: 1px solid var(–border);
+display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: 14px; font-weight: 600; color: var(–text); }
+.card-badge {
+font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500;
+}
+.badge-red { background: var(–glow-red); color: var(–accent-red); border: 1px solid rgba(239,68,68,0.2); }
+.badge-green { background: var(–glow-green); color: var(–accent-green); border: 1px solid rgba(16,185,129,0.2); }
+.badge-blue { background: var(–glow-blue); color: var(–accent-blue); border: 1px solid rgba(59,130,246,0.2); }
+.card-body { padding: 16px 20px; }
+
+/* SEARCH */
+.search-bar {
+display: flex; gap: 10px; margin-bottom: 16px;
+}
+.search-input {
+flex: 1; background: var(–surface2); border: 1px solid var(–border);
+border-radius: 8px; padding: 9px 14px; color: var(–text);
+font-size: 13px; font-family: inherit; outline: none;
+transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(–accent-blue); }
+.search-input::placeholder { color: var(–text-muted); }
+.filter-btn {
+background: var(–surface2); border: 1px solid var(–border);
+color: var(–text-dim); border-radius: 8px; padding: 9px 14px;
+font-size: 13px; cursor: pointer; font-family: inherit;
+transition: all 0.2s; white-space: nowrap;
+}
+.filter-btn.active { background: var(–accent-red); border-color: var(–accent-red); color: #fff; }
+.filter-btn:hover:not(.active) { border-color: var(–accent-blue); color: var(–accent-blue); }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+.table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-wrap::-webkit-scrollbar-track { background: var(–surface); }
+.table-wrap::-webkit-scrollbar-thumb { background: var(–border); border-radius: 3px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+text-align: left; padding: 10px 12px;
+color: var(–text-muted); font-weight: 500; font-size: 11px;
+text-transform: uppercase; letter-spacing: 0.05em;
+border-bottom: 1px solid var(–border);
+position: sticky; top: 0; background: var(–surface); z-index: 10;
+}
+td { padding: 10px 12px; border-bottom: 1px solid rgba(30,45,71,0.5); }
+tr:hover td { background: var(–surface2); }
+tr:last-child td { border-bottom: none; }
+
+/* STATUS BADGES */
+.status {
+display: inline-flex; align-items: center; gap: 5px;
+padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap;
+}
+.status::before { content: ‘’; width: 5px; height: 5px; border-radius: 50%; }
+.status-ok { background: var(–glow-green); color: var(–accent-green); }
+.status-ok::before { background: var(–accent-green); }
+.status-low { background: var(–glow-red); color: var(–accent-red); }
+.status-low::before { background: var(–accent-red); }
+.status-unknown { background: rgba(100,116,139,0.1); color: var(–text-muted); }
+.status-unknown::before { background: var(–text-muted); }
+
+/* STOCK BAR */
+.stock-bar { display: flex; align-items: center; gap: 8px; }
+.bar-track { flex: 1; height: 5px; background: var(–border); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.bar-ok { background: var(–accent-green); }
+.bar-low { background: var(–accent-red); }
+.bar-num { font-family: ‘IBM Plex Mono’, monospace; font-size: 12px; color: var(–text-dim); min-width: 40px; text-align: right; }
+
+/* DONUT CHART */
+.chart-area { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 16px 0; }
+.donut-wrap { position: relative; width: 140px; height: 140px; }
+.donut-wrap svg { transform: rotate(-90deg); }
+.donut-label {
+position: absolute; inset: 0; display: flex; flex-direction: column;
+align-items: center; justify-content: center;
+}
+.donut-num { font-size: 26px; font-weight: 700; font-family: ‘IBM Plex Mono’, monospace; color: var(–text); }
+.donut-sub { font-size: 10px; color: var(–text-muted); text-align: center; }
+.legend { display: flex; flex-direction: column; gap: 10px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.legend-count { font-family: ‘IBM Plex Mono’, monospace; color: var(–text-dim); margin-left: auto; min-width: 30px; text-align: right; font-size: 12px; }
+
+/* TRANSACTION LIST */
+.txn-list { display: flex; flex-direction: column; gap: 1px; }
+.txn-item {
+display: flex; align-items: center; gap: 12px;
+padding: 10px 0; border-bottom: 1px solid rgba(30,45,71,0.4);
+}
+.txn-item:last-child { border-bottom: none; }
+.txn-icon {
+width: 32px; height: 32px; border-radius: 8px;
+display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+}
+.txn-icon.out { background: var(–glow-red); }
+.txn-icon.in { background: var(–glow-green); }
+.txn-name { font-size: 13px; color: var(–text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.txn-qty {
+font-family: ‘IBM Plex Mono’, monospace; font-size: 13px; font-weight: 600;
+flex-shrink: 0;
+}
+.txn-qty.out { color: var(–accent-red); }
+.txn-qty.in { color: var(–accent-green); }
+.txn-date { font-size: 11px; color: var(–text-muted); flex-shrink: 0; }
+
+/* PURCHASE TABLE */
+.purchase-item { display: flex; flex-direction: column; gap: 2px; }
+.purchase-name { font-size: 13px; color: var(–text); }
+.purchase-meta { font-size: 11px; color: var(–text-muted); }
+.price-tag { font-family: ‘IBM Plex Mono’, monospace; font-size: 13px; font-weight: 600; color: var(–accent-blue); }
+.bill-status {
+font-size: 11px; padding: 3px 8px; border-radius: 20px; white-space: nowrap;
+}
+.bill-sent { background: var(–glow-green); color: var(–accent-green); }
+.bill-pending { background: rgba(245,158,11,0.1); color: var(–accent-yellow); }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 40px; color: var(–text-muted); }
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+/* LOADING */
+.loading { text-align: center; padding: 32px; }
+.spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(–border); border-top-color: var(–accent-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* PAGE SECTIONS */
+.page { display: none; }
+.page.active { display: block; }
+
+/* AI CHAT */
+.ai-panel {
+background: var(–surface); border: 1px solid var(–border);
+border-radius: 12px; overflow: hidden;
+}
+.ai-header {
+padding: 14px 20px; border-bottom: 1px solid var(–border);
+display: flex; align-items: center; gap: 10px;
+}
+.ai-avatar {
+width: 28px; height: 28px; border-radius: 8px;
+background: linear-gradient(135deg, var(–accent-blue), var(–accent-purple));
+display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.ai-title { font-size: 14px; font-weight: 600; }
+.ai-subtitle { font-size: 11px; color: var(–text-muted); }
+.ai-messages { padding: 16px; min-height: 200px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.ai-messages::-webkit-scrollbar { width: 4px; }
+.ai-messages::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+.msg { display: flex; gap: 8px; align-items: flex-start; }
+.msg-bot { flex-direction: row; }
+.msg-user { flex-direction: row-reverse; }
+.msg-bubble {
+padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5;
+max-width: 85%;
+}
+.msg-bot .msg-bubble { background: var(–surface2); color: var(–text); border-bottom-left-radius: 4px; }
+.msg-user .msg-bubble { background: var(–accent-blue); color: #fff; border-bottom-right-radius: 4px; }
+.msg-icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 2px; }
+.msg-icon.bot { background: linear-gradient(135deg, var(–accent-blue), var(–accent-purple)); }
+.msg-icon.user { background: var(–surface2); }
+.ai-input-area {
+padding: 12px 16px; border-top: 1px solid var(–border);
+display: flex; gap: 8px;
+}
+.ai-input {
+flex: 1; background: var(–surface2); border: 1px solid var(–border);
+border-radius: 8px; padding: 9px 14px; color: var(–text);
+font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s;
+resize: none; height: 40px;
+}
+.ai-input:focus { border-color: var(–accent-blue); }
+.ai-input::placeholder { color: var(–text-muted); }
+.btn-send {
+background: var(–accent-blue); border: none; color: #fff;
+border-radius: 8px; padding: 9px 16px; cursor: pointer; font-size: 13px;
+font-family: inherit; font-weight: 500; transition: background 0.2s;
+display: flex; align-items: center; gap: 6px;
+}
+.btn-send:hover { background: #2563eb; }
+.btn-send:disabled { background: var(–border); cursor: not-allowed; color: var(–text-muted); }
+.typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+.typing span { width: 6px; height: 6px; border-radius: 50%; background: var(–text-muted); animation: bounce 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+
+/* QUICK CHIPS */
+.quick-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px 0; }
+.chip {
+background: var(–surface2); border: 1px solid var(–border);
+border-radius: 20px; padding: 5px 12px; font-size: 12px;
+color: var(–text-dim); cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.chip:hover { border-color: var(–accent-blue); color: var(–accent-blue); }
+
+/* BILL SCAN */
+.scan-zone {
+border: 2px dashed var(–border); border-radius: 12px;
+padding: 28px; text-align: center; cursor: pointer;
+transition: all 0.2s; margin-bottom: 16px; position: relative;
+background: var(–surface2);
+}
+.scan-zone:hover, .scan-zone.drag-over {
+border-color: var(–accent-blue); background: var(–glow-blue);
+}
+.scan-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.scan-icon { font-size: 36px; margin-bottom: 8px; }
+.scan-text { font-size: 14px; color: var(–text); font-weight: 500; }
+.scan-sub { font-size: 12px; color: var(–text-muted); margin-top: 4px; }
+.preview-img { max-width: 100%; max-height: 220px; border-radius: 8px; border: 1px solid var(–border); object-fit: contain; }
+.scan-result {
+background: var(–surface2); border: 1px solid var(–border);
+border-radius: 10px; padding: 14px; margin-top: 12px;
+}
+.scan-result-title { font-size: 12px; color: var(–text-muted); margin-bottom: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+.scan-field { display: grid; grid-template-columns: 120px 1fr; gap: 6px; align-items: center; margin-bottom: 8px; }
+.scan-field label { font-size: 12px; color: var(–text-muted); }
+.scan-field input, .scan-field select {
+background: var(–surface); border: 1px solid var(–border);
+border-radius: 6px; padding: 6px 10px; color: var(–text);
+font-size: 13px; font-family: inherit; outline: none; width: 100%;
+transition: border-color 0.2s;
+}
+.scan-field input:focus, .scan-field select:focus { border-color: var(–accent-blue); }
+.scan-items-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+.scan-items-table th { text-align: left; padding: 6px 8px; color: var(–text-muted); font-size: 11px; border-bottom: 1px solid var(–border); }
+.scan-items-table td { padding: 6px 8px; border-bottom: 1px solid rgba(30,45,71,0.4); }
+.scan-items-table input { background: transparent; border: none; color: var(–text); font-family: inherit; font-size: 12px; width: 100%; outline: none; }
+.scan-items-table input:focus { background: var(–surface); border-radius: 4px; padding: 2px 4px; }
+.btn-scan { background: linear-gradient(135deg, var(–accent-blue), var(–accent-purple)); border: none; color: #fff; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-size: 14px; font-family: inherit; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; }
+.btn-scan:hover { opacity: 0.9; }
+.btn-scan:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-confirm { background: var(–accent-green); border: none; color: #fff; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-size: 13px; font-family: inherit; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; }
+.btn-confirm:hover { opacity: 0.9; }
+.scan-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 10px; }
+.scan-status.scanning { background: var(–glow-blue); color: var(–accent-blue); }
+.scan-status.done { background: var(–glow-green); color: var(–accent-green); }
+.scan-status.error { background: var(–glow-red); color: var(–accent-red); }
+.scan-spinner { width: 16px; height: 16px; border: 2px solid rgba(59,130,246,0.3); border-top-color: var(–accent-blue); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+.add-row-btn { background: transparent; border: 1px dashed var(–border); color: var(–text-muted); border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: inherit; margin-top: 6px; transition: all 0.2s; }
+.add-row-btn:hover { border-color: var(–accent-blue); color: var(–accent-blue); }
+.del-row { background: none; border: none; color: var(–accent-red); cursor: pointer; font-size: 14px; padding: 0 4px; opacity: 0.6; }
+.del-row:hover { opacity: 1; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.card:nth-child(2) { animation-delay: 0.05s; }
+.card:nth-child(3) { animation-delay: 0.1s; }
+
+@media (max-width: 900px) {
+.stats-row { grid-template-columns: repeat(2,1fr); }
+.grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🏥</div>
+        <div>
+          <div class="logo-text">คลังวัสดุการแพทย์</div>
+          <div class="logo-sub">Medical Supply Dashboard</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="live-badge"><div class="live-dot"></div>Live</div>
+        <div class="last-update" id="lastUpdate">--:--:--</div>
+        <button class="btn-refresh" onclick="refreshData()">↻ รีเฟรช</button>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab active" onclick="switchTab('overview', this)">📊 ภาพรวม</button>
+      <button class="tab" onclick="switchTab('inventory', this)">📦 สถานะคลัง</button>
+      <button class="tab" onclick="switchTab('transactions', this)">📋 รับ-จ่าย</button>
+      <button class="tab" onclick="switchTab('purchase', this)">🧾 บันทึกบิล</button>
+      <button class="tab" onclick="switchTab('ai', this)">🤖 AI ช่วยวิเคราะห์</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- OVERVIEW PAGE -->
+    <div id="page-overview" class="page active">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🔴 วัสดุที่ต้องสั่งเพิ่ม</span>
+            <span class="card-badge badge-red" id="lowCount">-</span>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table id="lowTable">
+                <thead><tr><th>ชื่อวัสดุ</th><th>คงคลัง</th><th>จุดสั่ง</th><th>สถานะ</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📈 สัดส่วนสถานะคลัง</span>
+            <span class="card-badge badge-blue">อัปเดตสด</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-area">
+              <div class="donut-wrap">
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                  <circle cx="70" cy="70" r="55" fill="none" stroke="#1e2d47" stroke-width="18"/>
+                  <circle id="donutOK" cx="70" cy="70" r="55" fill="none" stroke="#10b981" stroke-width="18" stroke-dasharray="0 346" stroke-linecap="round"/>
+                  <circle id="donutLow" cx="70" cy="70" r="55" fill="none" stroke="#ef4444" stroke-width="18" stroke-dasharray="0 346" stroke-dashoffset="0" stroke-linecap="round"/>
+                </svg>
+                <div class="donut-label">
+                  <div class="donut-num" id="donutPct">-</div>
+                  <div class="donut-sub">OK</div>
+                </div>
+              </div>
+              <div class="legend" id="donutLegend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🕐 รายการจ่ายล่าสุด (22/4/2569)</span>
+            <span class="card-badge badge-red">จ่ายออก</span>
+          </div>
+          <div class="card-body">
+            <div class="txn-list" id="recentTxn"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">💰 ยอดซื้อสะสม</span>
+          </div>
+          <div class="card-body">
+            <div style="text-align:center; padding: 20px 0;">
+              <div style="font-size:11px; color: var(--text-muted); margin-bottom:4px;">รวมยอดซื้อตั้งแต่ต้นปีงบ 2569</div>
+              <div style="font-size:36px; font-weight:700; font-family:'IBM Plex Mono',monospace; color: var(--accent-blue);">฿1,354,633</div>
+              <div style="font-size:12px; color: var(--text-muted); margin-top:8px;">ล่าสุด: ณัชชนม SO0000507</div>
+            </div>
+            <div style="border-top:1px solid var(--border); padding-top:14px; margin-top:4px; display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:13px;">
+                <span style="color:var(--text-muted)">Mask disposable (200 กล่อง)</span>
+                <span style="font-family:'IBM Plex Mono',monospace; color:var(--accent-blue)">฿13,000</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:13px;">
+                <span style="color:var(--text-muted)">แอลกอฮอล์เจล (50 ขวด)</span>
+                <span style="font-family:'IBM Plex Mono',monospace; color:var(--accent-blue)">฿3,250</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:13px;">
+                <span style="color:var(--text-muted)">Sterile Jel (4 กล่อง)</span>
+                <span style="font-family:'IBM Plex Mono',monospace; color:var(--accent-blue)">฿4,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+```
+<!-- INVENTORY PAGE -->
+<div id="page-inventory" class="page">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📦 ตารางสถานะคลังวัสดุทั้งหมด</span>
+      <span class="card-badge badge-blue" id="totalItems">-</span>
+    </div>
+    <div class="card-body">
+      <div class="search-bar">
+        <input type="text" class="search-input" placeholder="🔍 ค้นหาชื่อวัสดุ, รหัส..." id="searchInput" oninput="filterInventory()">
+        <button class="filter-btn" id="filterLow" onclick="toggleFilter()">🔴 ต้องสั่งเพิ่ม</button>
+      </div>
+      <div class="table-wrap" style="max-height:600px;">
+        <table id="inventoryTable">
+          <thead>
+            <tr>
+              <th>#</th><th>รหัส</th><th>ชื่อวัสดุ</th><th>หน่วย</th>
+              <th>ยกยอด</th><th>รับเข้า</th><th>จ่ายออก</th><th>คงคลัง</th>
+              <th>จุดสั่ง</th><th>สถานะ</th><th>Stock</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TRANSACTIONS PAGE -->
+<div id="page-transactions" class="page">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📋 บันทึกรับเข้า-จ่ายออก วัสดุทางการแพทย์</span>
+      <span class="card-badge badge-red">22/4/2569</span>
+    </div>
+    <div class="card-body">
+      <div class="table-wrap" style="max-height:600px;">
+        <table id="txnTable">
+          <thead><tr><th>#</th><th>วันที่</th><th>ชื่อวัสดุ</th><th>ประเภท</th><th>จำนวน</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PURCHASE PAGE -->
+<div id="page-purchase" class="page">
+  <div class="grid-2" style="align-items:start;">
+    <!-- LEFT: SCAN PANEL -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📸 สแกนบิลอัตโนมัติ</span>
+        <span class="card-badge badge-blue">AI อ่านบิล</span>
+      </div>
+      <div class="card-body">
+        <div class="scan-zone" id="scanZone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+          <input type="file" accept="image/*" id="billFile" onchange="handleFileSelect(event)">
+          <div class="scan-icon">📄</div>
+          <div class="scan-text">คลิกหรือลากรูปบิลมาวางที่นี่</div>
+          <div class="scan-sub">รองรับ JPG, PNG · ถ่ายรูปด้วยมือถือแล้วส่งก็ได้</div>
+        </div>
+
+        <div id="previewArea" style="display:none; margin-bottom:12px; text-align:center;">
+          <img id="previewImg" class="preview-img" src="" alt="preview">
+          <div style="margin-top:8px; display:flex; gap:8px; justify-content:center;">
+            <button class="btn-scan" id="btnScanBill" onclick="scanBill()">
+              <span id="scanBtnIcon">🔍</span> อ่านบิลด้วย AI
+            </button>
+            <button style="background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:10px 16px;cursor:pointer;font-family:inherit;font-size:13px;" onclick="resetScan()">✕ ล้าง</button>
+          </div>
+        </div>
+
+        <div id="scanStatusArea"></div>
+
+        <!-- EDITABLE RESULT FORM -->
+        <div id="scanResultArea" style="display:none;">
+          <div class="scan-result">
+            <div class="scan-result-title">✏️ ตรวจสอบและแก้ไขก่อนบันทึก</div>
+            <div class="scan-field">
+              <label>บริษัท</label>
+              <input type="text" id="f_company" placeholder="ชื่อบริษัท">
+            </div>
+            <div class="scan-field">
+              <label>เลขที่บิล</label>
+              <input type="text" id="f_bill" placeholder="เลขที่บิล/ใบสั่งซื้อ">
+            </div>
+            <div class="scan-field">
+              <label>Lot Number</label>
+              <input type="text" id="f_lot" placeholder="Lot / Batch">
+            </div>
+            <div class="scan-field">
+              <label>วันที่สั่งซื้อ</label>
+              <input type="text" id="f_date" placeholder="dd/mm/yyyy">
+            </div>
+            <div class="scan-field">
+              <label>สถานะ</label>
+              <select id="f_status">
+                <option>ยังไม่ส่ง</option>
+                <option>ส่งแล้ว</option>
+                <option>รอบิลครบ</option>
+              </select>
+            </div>
+
+            <div style="font-size:11px;color:var(--text-muted);margin:12px 0 6px;text-transform:uppercase;letter-spacing:0.05em;">รายการสินค้า</div>
+            <table class="scan-items-table">
+              <thead><tr><th>ชื่อวัสดุ</th><th>หน่วย</th><th>จำนวน</th><th>ราคา/หน่วย</th><th>รวม</th><th></th></tr></thead>
+              <tbody id="scanItemsBody"></tbody>
+            </table>
+            <button class="add-row-btn" onclick="addScanRow()">+ เพิ่มรายการ</button>
+
+            <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+              <button class="btn-confirm" onclick="confirmBill()">✅ บันทึกบิลนี้</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: BILL LIST -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🧾 ประวัติบิลทั้งหมด</span>
+        <span class="card-badge badge-blue" id="billCount">2 รายการ</span>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap" style="max-height:600px;">
+          <table id="purchaseTable">
+            <thead><tr><th>#</th><th>บริษัท</th><th>เลขที่บิล</th><th>วัสดุ</th><th>จำนวน</th><th>รวม</th><th>วันที่</th><th>สถานะ</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI PAGE -->
+<div id="page-ai" class="page">
+  <div class="grid-2">
+    <div class="ai-panel">
+      <div class="ai-header">
+        <div class="ai-avatar">🤖</div>
+        <div>
+          <div class="ai-title">AI วิเคราะห์คลัง</div>
+          <div class="ai-subtitle">ถามได้เลย — วิเคราะห์จากข้อมูลจริง</div>
+        </div>
+      </div>
+      <div class="quick-chips">
+        <button class="chip" onclick="askAI('สรุปสถานะคลังวัสดุที่วิกฤต')">สรุปวัสดุวิกฤต</button>
+        <button class="chip" onclick="askAI('วัสดุไหนที่จ่ายออกมากที่สุดในรอบนี้')">จ่ายออกมากสุด</button>
+        <button class="chip" onclick="askAI('แนะนำลำดับการสั่งซื้อที่ควรทำก่อน')">แนะนำลำดับสั่งซื้อ</button>
+        <button class="chip" onclick="askAI('สรุปบิลการสั่งซื้อที่ผ่านมา')">สรุปบิลล่าสุด</button>
+      </div>
+      <div class="ai-messages" id="aiMessages">
+        <div class="msg msg-bot">
+          <div class="msg-icon bot">🤖</div>
+          <div class="msg-bubble">สวัสดีครับ! ผมวิเคราะห์ข้อมูลคลังวัสดุแพทย์ของท่านแล้ว มีวัสดุกว่า 430 รายการ ถามอะไรได้เลยครับ 😊</div>
+        </div>
+      </div>
+      <div class="ai-input-area">
+        <textarea class="ai-input" id="aiInput" placeholder="พิมพ์คำถามเกี่ยวกับคลังวัสดุ..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"></textarea>
+        <button class="btn-send" id="btnSend" onclick="sendAI()">ส่ง ▶</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">📌 สรุปด่วน</span></div>
+      <div class="card-body" id="aiSummary">
+        <div class="loading"><div class="spinner"></div><br><span style="font-size:13px;color:var(--text-muted);margin-top:8px;display:block">กำลังวิเคราะห์...</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+  </main>
+</div>
+
+<script>
+// ================= DATA =================
+const inventoryData = [
+  {id:3,code:"Away0",name:"Airway No 00",unit:"ชิ้น",prev:45,in:0,out:0,stock:45,order:20,status:"OK"},
+  {id:4,code:"Away1",name:"Airway No 0",unit:"ชิ้น",prev:45,in:0,out:0,stock:45,order:20,status:"OK"},
+  {id:5,code:"Away2",name:"Airway No 1",unit:"ชิ้น",prev:45,in:0,out:2,stock:43,order:20,status:"OK"},
+  {id:6,code:"Away3",name:"Airway No 2",unit:"ชิ้น",prev:48,in:0,out:2,stock:46,order:30,status:"OK"},
+  {id:7,code:"Away4",name:"Airway No 3",unit:"ชิ้น",prev:9,in:0,out:0,stock:9,order:30,status:"ต้องสั่งเพิ่ม"},
+  {id:8,code:"Away5",name:"Airway No 4",unit:"ชิ้น",prev:40,in:0,out:5,stock:35,order:30,status:"OK"},
+  {id:9,code:"Away6",name:"Airway No 5",unit:"ชิ้น",prev:30,in:0,out:0,stock:30,order:30,status:"ต้องสั่งเพิ่ม"},
+  {id:10,code:"Aln1/2",name:"Aluminium splint 1/2\"",unit:"กล่อง",prev:0,in:0,out:0,stock:0,order:1,status:"ต้องสั่งเพิ่ม"},
+  {id:11,code:"Aln3/4",name:"Aluminium splint 3/4\"",unit:"กล่อง",prev:2,in:0,out:0,stock:2,order:1,status:"OK"},
+  {id:12,code:"ArmXS",name:"Arm sling No.XS",unit:"ชิ้น",prev:10,in:0,out:0,stock:10,order:20,status:"ต้องสั่งเพิ่ม"},
+  {id:13,code:"ArmS",name:"Arm sling No.S",unit:"ชิ้น",prev:20,in:0,out:0,stock:20,order:20,status:"ต้องสั่งเพิ่ม"},
+  {id:14,code:"ArmM",name:"Arm sling No.M",unit:"ชิ้น",prev:40,in:0,out:0,stock:40,order:30,status:"OK"},
+  {id:15,code:"ArmL",name:"Arm sling No.L",unit:"ชิ้น",prev:21,in:0,out:0,stock:21,order:30,status:"ต้องสั่งเพิ่ม"},
+  {id:25,code:"Chdpad",name:"Chlorhexidine pad",unit:"กล่อง",prev:11,in:0,out:0,stock:11,order:null,status:""},
+  {id:26,code:"CG20",name:"Chromic catgat 2/0",unit:"กล่อง",prev:1,in:0,out:0,stock:1,order:null,status:"OK"},
+  {id:27,code:"CG40",name:"Chromic catgat 4/0",unit:"กล่อง",prev:0,in:0,out:0,stock:0,order:null,status:"ต้องสั่งเพิ่ม"},
+  {id:33,code:"CF2",name:"Conform 2\"",unit:"โหล",prev:10,in:0,out:2,stock:8,order:10,status:"ต้องสั่งเพิ่ม"},
+  {id:34,code:"CF3",name:"Conform 3\"",unit:"โหล",prev:4,in:0,out:2,stock:2,order:15,status:"ต้องสั่งเพิ่ม"},
+  {id:35,code:"CF4",name:"Conform 4\"",unit:"โหล",prev:13,in:0,out:7,stock:6,order:15,status:"ต้องสั่งเพิ่ม"},
+  {id:36,code:"CF6",name:"Conform 6\"",unit:"โหล",prev:25,in:0,out:5,stock:20,order:10,status:"OK"},
+  {id:47,code:"DGss",name:"Disposable glove SS",unit:"กล่อง",prev:94,in:0,out:12,stock:82,order:60,status:"OK"},
+  {id:48,code:"DGs",name:"Disposable glove S",unit:"กล่อง",prev:70,in:0,out:15,stock:55,order:60,status:"ต้องสั่งเพิ่ม"},
+  {id:49,code:"DGm",name:"Disposable glove M",unit:"กล่อง",prev:15,in:0,out:1,stock:14,order:60,status:"ต้องสั่งเพิ่ม"},
+  {id:50,code:"DGl",name:"Disposable glove L",unit:"กล่อง",prev:51,in:0,out:0,stock:51,order:60,status:"ต้องสั่งเพิ่ม"},
+  {id:51,code:"EB2",name:"Elastic bandage 2\"",unit:"ม้วน",prev:147,in:0,out:0,stock:147,order:120,status:"OK"},
+  {id:52,code:"EB3",name:"Elastic bandage 3\"",unit:"ม้วน",prev:240,in:0,out:1,stock:239,order:120,status:"OK"},
+  {id:53,code:"EB4",name:"Elastic bandage 4\"",unit:"ม้วน",prev:387,in:0,out:1,stock:386,order:240,status:"OK"},
+  {id:87,code:"FC14",name:"Foley's cath No.14",unit:"กล่อง",prev:10,in:0,out:1,stock:9,order:5,status:"OK"},
+  {id:88,code:"FC16",name:"Foley's cath No.16",unit:"กล่อง",prev:24,in:0,out:1,stock:23,order:20,status:"OK"},
+  {id:89,code:"FC18",name:"Foley's cath No.18",unit:"กล่อง",prev:1,in:0,out:0,stock:1,order:10,status:"ต้องสั่งเพิ่ม"},
+  {id:96,code:"G22",name:"Gause 2x2\"",unit:"ห่อ",prev:240,in:0,out:0,stock:240,order:300,status:"ต้องสั่งเพิ่ม"},
+  {id:97,code:"G33",name:"Gause 3x3\"",unit:"ห่อ",prev:95,in:0,out:0,stock:95,order:300,status:"ต้องสั่งเพิ่ม"},
+  {id:98,code:"G44",name:"Gause 4x4\"",unit:"ห่อ",prev:37,in:0,out:0,stock:37,order:300,status:"ต้องสั่งเพิ่ม"},
+  {id:99,code:"GD",name:"Gause drainge 0.25\"",unit:"ห่อ",prev:110,in:0,out:40,stock:70,order:50,status:"OK"},
+  {id:100,code:"G22s",name:"Gauze Swab 2x2\" Sterile",unit:"ห่อ",prev:3400,in:0,out:0,stock:3400,order:3600,status:"ต้องสั่งเพิ่ม"},
+  {id:101,code:"G33s",name:"Gause swab 3x3\" Sterile",unit:"ห่อ",prev:5200,in:0,out:0,stock:5200,order:4000,status:"OK"},
+  {id:102,code:"G44s",name:"Gauze Swab 4x4\" Sterile",unit:"ห่อ",prev:3000,in:0,out:0,stock:3000,order:2500,status:"OK"},
+  {id:113,code:"ExP",name:"Injection plug with T",unit:"กล่อง",prev:13,in:0,out:2,stock:11,order:24,status:"ต้องสั่งเพิ่ม"},
+  {id:117,code:"Med20",name:"IVFCath No.20",unit:"กล่อง",prev:22,in:0,out:1,stock:21,order:50,status:"ต้องสั่งเพิ่ม"},
+  {id:118,code:"Med22",name:"IVFCath No.22",unit:"กล่อง",prev:55,in:0,out:3,stock:52,order:100,status:"ต้องสั่งเพิ่ม"},
+  {id:119,code:"Med24",name:"IVFCath No.24",unit:"กล่อง",prev:41,in:0,out:3,stock:38,order:50,status:"ต้องสั่งเพิ่ม"},
+  {id:129,code:"MD",name:"Mask disposable",unit:"กล่อง",prev:241,in:0,out:13,stock:228,order:240,status:"ต้องสั่งเพิ่ม"},
+  {id:130,code:"N95",name:"Mask N95",unit:"กล่อง",prev:3,in:0,out:0,stock:3,order:3,status:"ต้องสั่งเพิ่ม"},
+  {id:133,code:"Nd181",name:"Needle 18*1\"",unit:"กล่อง",prev:127,in:0,out:0,stock:127,order:100,status:"OK"},
+  {id:134,code:"Nd18112",name:"Needle 18*1 1/2\"",unit:"กล่อง",prev:109,in:0,out:3,stock:106,order:100,status:"OK"},
+  {id:148,code:"NG16",name:"NG Tube No.16",unit:"ชิ้น",prev:56,in:0,out:10,stock:46,order:50,status:"ต้องสั่งเพิ่ม"},
+  {id:149,code:"NG18",name:"NG Tube No.18",unit:"ชิ้น",prev:17,in:0,out:5,stock:12,order:10,status:"OK"},
+  {id:175,code:"Glv6.5",name:"Surgical glove No 6.5",unit:"คู่",prev:450,in:0,out:70,stock:380,order:10,status:"OK"},
+  {id:176,code:"Glv7.0",name:"Surgical glove No 7",unit:"คู่",prev:985,in:0,out:50,stock:935,order:10,status:"OK"},
+  {id:177,code:"Glv7.5",name:"Surgical glove No 7.5",unit:"คู่",prev:230,in:0,out:10,stock:220,order:10,status:"OK"},
+  {id:178,code:"Bldset",name:"Set ให้เลือด (blood set)",unit:"ชิ้น",prev:197,in:0,out:0,stock:197,order:200,status:"ต้องสั่งเพิ่ม"},
+  {id:179,code:"Macset",name:"Set macro drip ผู้ใหญ่",unit:"ชิ้น",prev:600,in:0,out:200,stock:400,order:800,status:"ต้องสั่งเพิ่ม"},
+  {id:180,code:"Miset",name:"Set micro drip เด็ก",unit:"ชิ้น",prev:900,in:0,out:100,stock:800,order:1000,status:"ต้องสั่งเพิ่ม"},
+  {id:211,code:"syr3",name:"Syringe 3 cc",unit:"กล่อง",prev:110,in:0,out:5,stock:105,order:100,status:"OK"},
+  {id:212,code:"syr5",name:"Syringe 5 cc",unit:"กล่อง",prev:74,in:0,out:3,stock:71,order:50,status:"OK"},
+  {id:213,code:"syr10",name:"Syringe 10 cc",unit:"กล่อง",prev:53,in:0,out:2,stock:51,order:50,status:"OK"},
+  {id:224,code:"TC32",name:"Thoracic catheter No.32",unit:"ชิ้น",prev:10,in:0,out:1,stock:9,order:2,status:"OK"},
+  {id:226,code:"TW",name:"Three-way",unit:"กล่อง",prev:23,in:0,out:1,stock:22,order:20,status:"OK"},
+  {id:234,code:"Ub2000",name:"Urine bag",unit:"ถุง",prev:70,in:0,out:30,stock:40,order:200,status:"ต้องสั่งเพิ่ม"},
+  {id:252,code:"BPamp",name:"กระดาษเครื่องวัดความดันสอดแขน",unit:"ม้วน",prev:78,in:0,out:5,stock:73,order:50,status:"OK"},
+  {id:375,code:"tran1",name:"พลาสเตอร์ Transpore 1\"",unit:"กล่อง",prev:20,in:0,out:5,stock:15,order:20,status:"ต้องสั่งเพิ่ม"},
+  {id:376,code:"Tpor12",name:"พลาสเตอร์ Transpore 1/2\"",unit:"กล่อง",prev:28,in:0,out:1,stock:27,order:20,status:"OK"},
+  {id:390,code:"สล035ก",name:"สำลี 0.35 กรัม",unit:"ห่อ",prev:14,in:0,out:4,stock:10,order:30,status:"ต้องสั่งเพิ่ม"},
+  {id:391,code:"สล140ก",name:"สำลี 1.40 กรัม",unit:"ห่อ",prev:42,in:0,out:0,stock:42,order:15,status:"OK"},
+  {id:430,code:"อพ",name:"เอี๊ยมพลาสติก",unit:"ชิ้น",prev:430,in:0,out:0,stock:430,order:400,status:"OK"},
+  {id:432,code:"ag",name:"แอลกอฮอล์เจลล้างมือ",unit:"ขวด",prev:64,in:0,out:0,stock:64,order:100,status:"ต้องสั่งเพิ่ม"},
+];
+
+const transactionData = [
+  {date:"22/4/2569",name:"Gause drainge 0.25\" sterile",type:"จ่ายออก",qty:40},
+  {date:"22/4/2569",name:"Set macro drip ผู้ใหญ่",type:"จ่ายออก",qty:100},
+  {date:"22/4/2569",name:"ซองผนึก 2\"",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"ถุงขยะดำ 36 x 42",type:"จ่ายออก",qty:5},
+  {date:"22/4/2569",name:"ถุงขยะแดง 22 x 32",type:"จ่ายออก",qty:5},
+  {date:"22/4/2569",name:"Three-way",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"Surgical glove No 6.5",type:"จ่ายออก",qty:50},
+  {date:"22/4/2569",name:"IVFCath No.20",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"IVFCath No.22",type:"จ่ายออก",qty:3},
+  {date:"22/4/2569",name:"IVFCath No.24",type:"จ่ายออก",qty:3},
+  {date:"22/4/2569",name:"Needle 18*1 1/2\"",type:"จ่ายออก",qty:3},
+  {date:"22/4/2569",name:"Foley's cath No.14",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"Foley's cath No.16",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"Urine bag",type:"จ่ายออก",qty:20},
+  {date:"22/4/2569",name:"NG Tube No.16",type:"จ่ายออก",qty:10},
+  {date:"22/4/2569",name:"NG Tube No.18",type:"จ่ายออก",qty:5},
+  {date:"22/4/2569",name:"พลาสเตอร์ Transpore 1\"",type:"จ่ายออก",qty:2},
+  {date:"22/4/2569",name:"พลาสเตอร์ Transpore 1/2\"",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"Disposable glove SS",type:"จ่ายออก",qty:8},
+  {date:"22/4/2569",name:"Disposable glove S",type:"จ่ายออก",qty:6},
+  {date:"22/4/2569",name:"ถุงขยะดำ 22 x 32",type:"จ่ายออก",qty:5},
+  {date:"22/4/2569",name:"ถุงขยะแดง 14 x 20",type:"จ่ายออก",qty:5},
+  {date:"22/4/2569",name:"Set macro drip ผู้ใหญ่",type:"จ่ายออก",qty:100},
+  {date:"22/4/2569",name:"Conform 4\"",type:"จ่ายออก",qty:4},
+  {date:"22/4/2569",name:"Conform 6\"",type:"จ่ายออก",qty:4},
+  {date:"22/4/2569",name:"Elastic bandage 3\"",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"Elastic bandage 4\"",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"Set micro drip เด็ก",type:"จ่ายออก",qty:100},
+  {date:"22/4/2569",name:"Mask disposable",type:"จ่ายออก",qty:5},
+  {date:"22/4/2569",name:"Syringe 3 cc",type:"จ่ายออก",qty:5},
+  {date:"22/4/2569",name:"Syringe 5 cc",type:"จ่ายออก",qty:3},
+  {date:"22/4/2569",name:"Syringe 10 cc",type:"จ่ายออก",qty:2},
+  {date:"22/4/2569",name:"Thoracic catheter No.32",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"Urine bag",type:"จ่ายออก",qty:10},
+  {date:"22/4/2569",name:"Surgical glove No 6.5",type:"จ่ายออก",qty:10},
+  {date:"22/4/2569",name:"Surgical glove No 7.5",type:"จ่ายออก",qty:10},
+  {date:"22/4/2569",name:"Injection plug with T",type:"จ่ายออก",qty:2},
+  {date:"22/4/2569",name:"Conform 2\"",type:"จ่ายออก",qty:2},
+  {date:"22/4/2569",name:"Conform 3\"",type:"จ่ายออก",qty:2},
+  {date:"22/4/2569",name:"Mask disposable",type:"จ่ายออก",qty:3},
+  {date:"22/4/2569",name:"Surgical glove No 7",type:"จ่ายออก",qty:50},
+  {date:"22/4/2569",name:"กระดาษเครื่องวัดความดันสอดแขน",type:"จ่ายออก",qty:5},
+  {date:"22/4/2569",name:"Syringe insulin 30g 100u",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"แก้วยาน้ำ 30 cc",type:"จ่ายออก",qty:1},
+  {date:"22/4/2569",name:"ซองยาใส 10x15 ซม.",type:"จ่ายออก",qty:3},
+  {date:"22/4/2569",name:"ซองยาใส 10x17 ซม.",type:"จ่ายออก",qty:2},
+  {date:"22/4/2569",name:"ซองยาใส 18x25 ซม.",type:"จ่ายออก",qty:3},
+  {date:"22/4/2569",name:"สำลี 0.35 กรัม",type:"จ่ายออก",qty:4},
+];
+
+const purchaseData = [
+  {no:1,company:"โพส เฮลท แคร",bill:"260410694",lot:"D35110326B",item:"Sterile jel",unit:"กล่อง",qty:4,price:1000,total:4000,orderDate:"2/4/2026",status:"ส่งแล้ว"},
+  {no:2,company:"ณัชชนม",bill:"SO0000507",lot:"250360",item:"Mask disposable",unit:"กล่อง",qty:200,price:65,total:13000,orderDate:"16/4/2026",status:"ส่งแล้ว"},
+  {no:3,company:"ณัชชนม",bill:"SO0000507",lot:"250360",item:"แอลกอฮอล์เจลล้างมือ",unit:"ขวด",qty:50,price:65,total:3250,orderDate:"16/4/2026",status:"ยังไม่ส่ง"},
+];
+
+// ================= COMPUTED =================
+let filterActive = false;
+let searchQuery = '';
+
+function getStats() {
+  const total = inventoryData.length;
+  const ok = inventoryData.filter(d => d.status === 'OK').length;
+  const low = inventoryData.filter(d => d.status === 'ต้องสั่งเพิ่ม').length;
+  const unknown = inventoryData.filter(d => !d.status || (d.status !== 'OK' && d.status !== 'ต้องสั่งเพิ่ม')).length;
+  const totalTxn = transactionData.reduce((a,b) => a + b.qty, 0);
+  return { total, ok, low, unknown, totalTxn };
+}
+
+// ================= RENDER =================
+function renderStats() {
+  const s = getStats();
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card blue"><div class="stat-label">วัสดุทั้งหมด</div><div class="stat-value blue">${s.total}</div><div class="stat-sub">รายการในระบบ</div></div>
+    <div class="stat-card green"><div class="stat-label">สถานะ OK</div><div class="stat-value green">${s.ok}</div><div class="stat-sub">${((s.ok/s.total)*100).toFixed(0)}% ของทั้งหมด</div></div>
+    <div class="stat-card red"><div class="stat-label">ต้องสั่งเพิ่ม</div><div class="stat-value red">${s.low}</div><div class="stat-sub">วัสดุต่ำกว่าจุดสั่ง</div></div>
+    <div class="stat-card yellow"><div class="stat-label">จ่ายออกวันนี้</div><div class="stat-value yellow">${s.totalTxn}</div><div class="stat-sub">22/4/2569 รวม ${transactionData.length} รายการ</div></div>
+  `;
+}
+
+function renderLowTable() {
+  const low = inventoryData.filter(d => d.status === 'ต้องสั่งเพิ่ม');
+  document.getElementById('lowCount').textContent = low.length + ' รายการ';
+  const tbody = document.querySelector('#lowTable tbody');
+  tbody.innerHTML = low.slice(0,20).map(d => `
+    <tr>
+      <td>${d.name}</td>
+      <td><span style="font-family:'IBM Plex Mono',monospace;color:${d.stock<=0?'var(--accent-red)':'var(--accent-yellow)'}">${d.stock}</span></td>
+      <td><span style="font-family:'IBM Plex Mono',monospace;color:var(--text-muted)">${d.order||'-'}</span></td>
+      <td><span class="status status-low">ต้องสั่ง</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderDonut() {
+  const s = getStats();
+  const circ = 2 * Math.PI * 55;
+  const okFrac = s.ok / s.total;
+  const lowFrac = s.low / s.total;
+  const okLen = okFrac * circ;
+  const lowLen = lowFrac * circ;
+  document.getElementById('donutOK').setAttribute('stroke-dasharray', `${okLen} ${circ - okLen}`);
+  document.getElementById('donutLow').setAttribute('stroke-dasharray', `${lowLen} ${circ - lowLen}`);
+  document.getElementById('donutLow').setAttribute('stroke-dashoffset', `-${okLen}`);
+  document.getElementById('donutPct').textContent = Math.round(okFrac * 100) + '%';
+  document.getElementById('donutLegend').innerHTML = `
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div><span>สถานะ OK</span><span class="legend-count">${s.ok}</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-red)"></div><span>ต้องสั่งเพิ่ม</span><span class="legend-count">${s.low}</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--text-muted)"></div><span>ไม่ระบุ</span><span class="legend-count">${s.unknown}</span></div>
+  `;
+}
+
+function renderRecentTxn() {
+  const top = transactionData.slice(0,8);
+  document.getElementById('recentTxn').innerHTML = top.map(t => `
+    <div class="txn-item">
+      <div class="txn-icon out">📤</div>
+      <div class="txn-name">${t.name}</div>
+      <div class="txn-qty out">-${t.qty}</div>
+      <div class="txn-date">${t.date}</div>
+    </div>
+  `).join('');
+}
+
+function renderInventory() {
+  const s = getStats();
+  document.getElementById('totalItems').textContent = s.total + ' รายการ';
+  let data = inventoryData;
+  if (filterActive) data = data.filter(d => d.status === 'ต้องสั่งเพิ่ม');
+  if (searchQuery) data = data.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.code.toLowerCase().includes(searchQuery.toLowerCase()));
+  const tbody = document.querySelector('#inventoryTable tbody');
+  tbody.innerHTML = data.map(d => {
+    const pct = d.order ? Math.min(100, (d.stock / d.order) * 100) : (d.stock > 0 ? 100 : 0);
+    const isOk = d.status === 'OK';
+    const isLow = d.status === 'ต้องสั่งเพิ่ม';
+    return `<tr>
+      <td style="color:var(--text-muted)">${d.id}</td>
+      <td><code style="font-size:11px;color:var(--accent-purple)">${d.code}</code></td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</td>
+      <td style="color:var(--text-muted)">${d.unit}</td>
+      <td style="font-family:'IBM Plex Mono',monospace">${d.prev}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent-green)">${d.in > 0 ? '+'+d.in : d.in}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--accent-red)">${d.out > 0 ? '-'+d.out : d.out}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:${d.stock <= 0 ? 'var(--accent-red)' : 'var(--text)'}">${d.stock}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;color:var(--text-muted)">${d.order || '-'}</td>
+      <td>${isOk ? '<span class="status status-ok">OK</span>' : isLow ? '<span class="status status-low">ต้องสั่ง</span>' : '<span class="status status-unknown">-</span>'}</td>
+      <td>
+        <div class="stock-bar">
+          <div class="bar-track"><div class="bar-fill ${isOk ? 'bar-ok' : 'bar-low'}" style="width:${pct}%"></div></div>
+          <span class="bar-num">${Math.round(pct)}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTransactions() {
+  const tbody = document.querySelector('#txnTable tbody');
+  tbody.innerHTML = transactionData.map((t,i) => `
+    <tr>
+      <td style="color:var(--text-muted)">${i+1}</td>
+      <td><code style="font-size:12px;color:var(--text-muted)">${t.date}</code></td>
+      <td>${t.name}</td>
+      <td><span class="status status-low">📤 ${t.type}</span></td>
+      <td><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--accent-red)">${t.qty}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderPurchase() {
+  document.getElementById('billCount').textContent = purchaseData.length + ' รายการ';
+  const tbody = document.querySelector('#purchaseTable tbody');
+  tbody.innerHTML = purchaseData.map((p,i) => `
+    <tr>
+      <td style="color:var(--text-muted)">${i+1}</td>
+      <td style="font-weight:500">${p.company}</td>
+      <td><code style="font-size:11px;color:var(--accent-blue)">${p.bill}</code></td>
+      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.item}</td>
+      <td style="font-family:'IBM Plex Mono',monospace">${p.qty} ${p.unit}</td>
+      <td class="price-tag">฿${p.total.toLocaleString()}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${p.orderDate}</td>
+      <td><span class="bill-status ${p.status==='ส่งแล้ว'?'bill-sent':'bill-pending'}">${p.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ================= BILL SCAN =================
+let currentImageBase64 = '';
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) loadImage(file);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('scanZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) loadImage(file);
+}
+function loadImage(file) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const base64 = ev.target.result;
+    currentImageBase64 = base64.split(',')[1];
+    document.getElementById('previewImg').src = base64;
+    document.getElementById('previewArea').style.display = 'block';
+    document.getElementById('scanZone').style.display = 'none';
+    document.getElementById('scanStatusArea').innerHTML = '';
+    document.getElementById('scanResultArea').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function resetScan() {
+  currentImageBase64 = '';
+  document.getElementById('previewArea').style.display = 'none';
+  document.getElementById('scanZone').style.display = 'block';
+  document.getElementById('scanStatusArea').innerHTML = '';
+  document.getElementById('scanResultArea').style.display = 'none';
+  document.getElementById('billFile').value = '';
+}
+
+async function scanBill() {
+  if (!currentImageBase64) return;
+  const btn = document.getElementById('btnScanBill');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="scan-spinner"></div> กำลังอ่านบิล...';
+  document.getElementById('scanStatusArea').innerHTML = `
+    <div class="scan-status scanning"><div class="scan-spinner"></div> AI กำลังวิเคราะห์รูปบิล...</div>`;
+  document.getElementById('scanResultArea').style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `คุณเป็น AI อ่านบิลสินค้าทางการแพทย์ ให้ตอบเป็น JSON เท่านั้น ไม่มี markdown ไม่มี backtick
+โครงสร้าง JSON:
+{
+  "company": "ชื่อบริษัท/ร้านค้า",
+  "bill": "เลขที่บิล",
+  "lot": "lot number หรือ batch",
+  "date": "วันที่ในบิล",
+  "items": [
+    {"name": "ชื่อสินค้า", "unit": "หน่วย", "qty": จำนวน, "price": ราคาต่อหน่วย, "total": ราคารวม}
+  ]
+}
+ถ้าไม่มีข้อมูลใดให้ใส่ "" หรือ 0`,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: currentImageBase64 } },
+            { type: 'text', text: 'กรุณาอ่านข้อมูลจากบิลนี้แล้วแปลงเป็น JSON' }
+          ]
+        }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.map(c => c.text||'').join('') || '';
+    let parsed;
+    try {
+      parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    } catch {
+      throw new Error('AI ไม่สามารถแยกข้อมูลได้');
+    }
+    fillScanForm(parsed);
+    document.getElementById('scanStatusArea').innerHTML = `
+      <div class="scan-status done">✅ อ่านบิลสำเร็จ! ตรวจสอบข้อมูลด้านล่างก่อนบันทึก</div>`;
+    document.getElementById('scanResultArea').style.display = 'block';
+  } catch(e) {
+    document.getElementById('scanStatusArea').innerHTML = `
+      <div class="scan-status error">❌ ${e.message || 'เกิดข้อผิดพลาด'} — ลองใหม่หรือกรอกเอง</div>`;
+    fillScanForm({company:'',bill:'',lot:'',date:'',items:[{name:'',unit:'',qty:0,price:0,total:0}]});
+    document.getElementById('scanResultArea').style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<span>🔍</span> อ่านบิลด้วย AI';
+}
+
+function fillScanForm(data) {
+  document.getElementById('f_company').value = data.company || '';
+  document.getElementById('f_bill').value = data.bill || '';
+  document.getElementById('f_lot').value = data.lot || '';
+  document.getElementById('f_date').value = data.date || '';
+  const tbody = document.getElementById('scanItemsBody');
+  tbody.innerHTML = '';
+  const items = data.items && data.items.length ? data.items : [{name:'',unit:'',qty:0,price:0,total:0}];
+  items.forEach(item => addScanRow(item));
+}
+
+function addScanRow(item={}) {
+  const tbody = document.getElementById('scanItemsBody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input value="${item.name||''}" placeholder="ชื่อวัสดุ" onchange="calcRowTotal(this)"></td>
+    <td><input value="${item.unit||''}" placeholder="หน่วย" style="width:60px"></td>
+    <td><input type="number" value="${item.qty||''}" placeholder="0" style="width:55px" onchange="calcRowTotal(this)"></td>
+    <td><input type="number" value="${item.price||''}" placeholder="0" style="width:70px" onchange="calcRowTotal(this)"></td>
+    <td><input type="number" value="${item.total||''}" placeholder="0" style="width:70px" readonly style="color:var(--accent-blue)"></td>
+    <td><button class="del-row" onclick="this.closest('tr').remove()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function calcRowTotal(el) {
+  const row = el.closest('tr');
+  const qty = parseFloat(row.cells[2].querySelector('input').value) || 0;
+  const price = parseFloat(row.cells[3].querySelector('input').value) || 0;
+  row.cells[4].querySelector('input').value = (qty * price) || '';
+}
+
+function confirmBill() {
+  const company = document.getElementById('f_company').value || 'ไม่ระบุ';
+  const bill = document.getElementById('f_bill').value || '-';
+  const lot = document.getElementById('f_lot').value || '-';
+  const date = document.getElementById('f_date').value || '-';
+  const status = document.getElementById('f_status').value;
+  const rows = document.querySelectorAll('#scanItemsBody tr');
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('input');
+    const name = cells[0].value;
+    const unit = cells[1].value;
+    const qty = parseFloat(cells[2].value) || 0;
+    const price = parseFloat(cells[3].value) || 0;
+    const total = parseFloat(cells[4].value) || qty * price;
+    if (name) {
+      purchaseData.push({ no: purchaseData.length+1, company, bill, lot, item: name, unit, qty, price, total, orderDate: date, status });
+    }
+  });
+  renderPurchase();
+  resetScan();
+  document.getElementById('scanStatusArea').innerHTML = '';
+  alert('✅ บันทึกบิลเรียบร้อยแล้ว!');
+}
+
+// ================= INTERACTIONS =================
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  if (tab === 'ai') renderAISummary();
+}
+
+function filterInventory() {
+  searchQuery = document.getElementById('searchInput').value;
+  renderInventory();
+}
+
+function toggleFilter() {
+  filterActive = !filterActive;
+  document.getElementById('filterLow').classList.toggle('active', filterActive);
+  renderInventory();
+}
+
+function updateTime() {
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('th-TH');
+}
+
+function refreshData() {
+  updateTime();
+  renderStats();
+  renderLowTable();
+  renderDonut();
+}
+
+// ================= AI =================
+const inventorySummary = () => {
+  const s = getStats();
+  const low = inventoryData.filter(d => d.status === 'ต้องสั่งเพิ่ม');
+  const topOut = [...transactionData].sort((a,b)=>b.qty-a.qty).slice(0,5);
+  return `ข้อมูลคลังวัสดุทางการแพทย์ (ณ 22/4/2569):
+- วัสดุทั้งหมด: ${s.total} รายการ
+- สถานะ OK: ${s.ok} รายการ (${((s.ok/s.total)*100).toFixed(0)}%)
+- ต้องสั่งเพิ่ม: ${s.low} รายการ (${((s.low/s.total)*100).toFixed(0)}%)
+- จ่ายออกวันนี้: ${transactionData.length} รายการ รวม ${s.totalTxn} หน่วย
+- ยอดซื้อสะสม: ฿1,354,633
+
+วัสดุที่ต้องสั่งเพิ่มด่วน (คงเหลือ 0): ${low.filter(d=>d.stock<=0).map(d=>d.name).slice(0,5).join(', ')}
+
+จ่ายออกมากสุดวันนี้: ${topOut.map(t=>t.name+'('+t.qty+')').join(', ')}
+
+บิลล่าสุด: ณัชชนม SO0000507 - Mask disposable 200 กล่อง ฿13,000, แอลกอฮอล์เจล 50 ขวด ฿3,250`;
+};
+
+async function sendAI() {
+  const input = document.getElementById('aiInput');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  addMsg(q, 'user');
+  document.getElementById('btnSend').disabled = true;
+
+  const typing = addTyping();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `คุณเป็น AI ผู้เชี่ยวชาญด้านการจัดการคลังวัสดุทางการแพทย์ของโรงพยาบาลไทย ตอบเป็นภาษาไทยเสมอ กระชับ ชัดเจน มีประโยชน์ ใช้ emoji ประกอบเล็กน้อย\n\nข้อมูลคลังปัจจุบัน:\n${inventorySummary()}`,
+        messages: [{ role: 'user', content: q }]
+      })
+    });
+    const data = await res.json();
+    removeTyping(typing);
+    const text = data.content?.map(c => c.text || '').join('') || 'ขออภัย ไม่สามารถตอบได้ในขณะนี้';
+    addMsg(text, 'bot');
+  } catch (e) {
+    removeTyping(typing);
+    addMsg('❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'bot');
+  }
+  document.getElementById('btnSend').disabled = false;
+}
+
+function askAI(q) {
+  document.getElementById('aiInput').value = q;
+  sendAI();
+}
+
+function addMsg(text, role) {
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = `msg msg-${role}`;
+  div.innerHTML = `
+    <div class="msg-icon ${role}">${role==='bot'?'🤖':'👤'}</div>
+    <div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-bot';
+  div.innerHTML = `<div class="msg-icon bot">🤖</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+function removeTyping(el) { el && el.remove(); }
+
+async function renderAISummary() {
+  const el = document.getElementById('aiSummary');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><br><span style="font-size:13px;color:var(--text-muted);margin-top:8px;display:block">กำลังวิเคราะห์...</span></div>';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'คุณเป็น AI วิเคราะห์คลังวัสดุแพทย์ ตอบเป็นภาษาไทย กระชับ ใช้หัวข้อสั้นๆ',
+        messages: [{ role: 'user', content: `สรุปสถานะคลังวัสดุแพทย์ใน 3-4 ประเด็นสำคัญ พร้อมข้อเสนอแนะเร่งด่วน:\n${inventorySummary()}` }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.map(c=>c.text||'').join('') || '';
+    el.innerHTML = `<div style="font-size:13px;line-height:1.7;color:var(--text)">${text.replace(/\n/g,'<br>')}</div>`;
+  } catch {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>ไม่สามารถโหลดได้</div>';
+  }
+}
+
+// ================= INIT =================
+function init() {
+  renderStats();
+  renderLowTable();
+  renderDonut();
+  renderRecentTxn();
+  renderInventory();
+  renderTransactions();
+  renderPurchase();
+  updateTime();
+  setInterval(updateTime, 1000);
+}
+init();
+</script>
+
+</body>
+</html>
